@@ -104,7 +104,12 @@ if "__main__" == __name__:
     ## iii) create light sources
     ########################################
     CreateLightSource("areaLight_top"  , 30.0,   0.0, 25.0)
+    cmds.setAttr(".intensity", 0.3) ## top is too bright ...
+    cmds.select(clear=True)
+
     CreateLightSource("areaLight_left" , 30.0, -45.0, 25.0) # [for experiment]
+    cmds.select(clear=True)
+
     CreateLightSource("areaLight_right", 30.0, +45.0, 25.0) # [for experiment]
     cmds.select(clear=True)
 
