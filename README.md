@@ -35,5 +35,12 @@ Open the script editor: "Menu bar -> Windows -> General Editors -> Script Editor
 These codes are supposed to be run once before running the optimization.  
 I recommend you to load them as default ("File -> Open script").
 
-1. load "init_scene.py" in this repository and run.  
-2. load "init_feature.py" in this repository and run.  
+1. load "**init_scene.py**" in this repository and run.  
+2. load "**init_feature.py**" in this repository and run.  
+
+## Optimization
+
+This has several stages, so we separate them and summarize as a single .py files.  
+
+- **search_BayesOpt.py**: initial global search based on Bayesian optimization.  
+- **search_FeatureGrad.py**: local search based on feature-parameter space gradient descent.  
