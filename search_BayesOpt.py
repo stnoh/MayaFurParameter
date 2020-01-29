@@ -31,7 +31,7 @@ def BayesOpt(
     ############################################################
 
     ## set constants for optimization in advance
-    max_iter = 100 if opt_params_dict.get('max_iter') is None else opt_params_dict['max_iter'] ## 50: ~5-min / 100: ~10-min
+    max_iter = 80  if opt_params_dict.get('max_iter') is None else opt_params_dict['max_iter'] ## 50: ~5-min / 100: ~10-min
 
     ## prepare reference image
     path_img_ref = folder_path + "/_ref_image.{0}".format(image_ext)
@@ -86,13 +86,19 @@ def BayesOpt(
         ## run until criterion is matched (or reaches max iteration)
         for num_iter in range(max_iter):
             next_x = opt.ask()
-            Cost_this = eval_cost(next_x, num_iter+1) ## [0,N-1] to [1,N]
+            Cost_this = eval_cost(next_x, num_iter)
             opt.tell(next_x, Cost_this)
 
             ## change the best result
             if  Cost_this < Cost_best:
                 Cost_best = Cost_this
                 params_01_vec_best = next_x[:]
+
+                ## show the tentative solution
+                path_dst = '{0}/bayesopt/iter_{1:04d}_tmp.{2}'.format(folder_path, num_iter, image_ext)
+                img_dst_cv2 = cv2.imread(path_dst)
+                img_text = "Cost: {0}\n#iter {1}".format(Cost_this, num_iter)
+                Misc.show_text_on_image_cv2(img_dst_cv2, img_text, "target")
         
     except Exception as e:
         traceback.print_exc()
@@ -179,7 +185,7 @@ if "__main__" == __name__:
                 )
             
             ## assign the initial color parameters before optimization
-            furRenderer.RenderFur(init_params_dict, folder_root+"/temp")
+            furRenderer.RenderFur(init_params_dict, folder_root+"/temp", False) ## we don't need this parameter
             
             ############################################################
             ## invert initial parameter dictionary as vector

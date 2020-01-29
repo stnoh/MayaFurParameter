@@ -31,9 +31,9 @@ def GradientDescent(
     ############################################################
 
     ## set constants for optimization in advance
-    max_iter   = 30   if opt_params_dict.get('max_iter') is None else opt_params_dict['max_iter']
-    max_step   = 20   if opt_params_dict.get('max_step') is None else opt_params_dict['max_step']
-    delta      = 0.10 if opt_params_dict.get('delta')    is None else opt_params_dict['delta']
+    max_iter   = 20    if opt_params_dict.get('max_iter') is None else opt_params_dict['max_iter']
+    max_step   = 15    if opt_params_dict.get('max_step') is None else opt_params_dict['max_step']
+    delta      = 0.075 if opt_params_dict.get('delta')    is None else opt_params_dict['delta']
 
     ## prepare reference image & get perceptual feature
     path_img_ref = folder_path + "/_ref_image.{0}".format(image_ext)
@@ -43,10 +43,13 @@ def GradientDescent(
 
     Misc.show_text_on_image_cv2(img_ref_cv2, "", "reference")
     
-    ## get elapsed time
+    ## initialize elapsed time
     global t_render_elapsed
     global t_imageio_elapsed
     global t_feature_elapsed
+    t_render_elapsed  = datetime.min - datetime.min
+    t_imageio_elapsed = datetime.min - datetime.min
+    t_feature_elapsed = datetime.min - datetime.min
 
     ############################################################
     ## run optimization loop
@@ -322,13 +325,11 @@ if "__main__" == __name__:
                 )
             
             ## assign the initial color parameters before optimization
-            furRenderer.RenderFur(init_params_dict, folder_root+"/temp")
+            furRenderer.RenderFur(init_params_dict, folder_root+"/temp", False) ## we don't need this parameter
             
             ############################################################
             ## invert initial parameter dictionary as vector
             ############################################################
-
-            print(img_ref_path)
 
             ## 1) random initial parameters [NOT SO USEFUL]
             #params01_vec_dst = np.random.random(15)
@@ -350,12 +351,6 @@ if "__main__" == __name__:
             ############################################################
 
             ## initialize elapsed time for each component as 0:00:00.000
-            global t_render_elapsed
-            global t_imageio_elapsed
-            global t_feature_elapsed
-            t_render_elapsed  = datetime.min - datetime.min
-            t_imageio_elapsed = datetime.min - datetime.min
-            t_feature_elapsed = datetime.min - datetime.min
             t_total_start = datetime.now()
 
             ## run optimization on GEOMETRY parameters
