@@ -20,6 +20,22 @@ import search_BayesOpt
 import search_FeatureGrad
 
 ###############################################################################
+## [TEMPORARY] get background color
+###############################################################################
+def getBackgroundColor(img_cv2):
+    bg_img1 = img_cv2[20:240, 20:180,:] ## left-top part
+    bg_img2 = img_cv2[20:240,760:180,:] ## right-top part
+    bg_sz  = bg_img1.shape[0]*bg_img1.shape[1] + bg_img2.shape[0]*bg_img2.shape[1]
+
+    ## [0,255] to [0.0:1.0]
+    bg_px_b = (np.sum(bg_img1[:,:,0]) + np.sum(bg_img2[:,:,0])) / (255.0 * bg_sz)
+    bg_px_g = (np.sum(bg_img1[:,:,1]) + np.sum(bg_img2[:,:,1])) / (255.0 * bg_sz)
+    bg_px_r = (np.sum(bg_img1[:,:,2]) + np.sum(bg_img2[:,:,2])) / (255.0 * bg_sz)
+
+    return bg_px_r, bg_px_g, bg_px_b
+
+
+###############################################################################
 ## example of usage
 ###############################################################################
 if "__main__" == __name__:
@@ -54,6 +70,22 @@ if "__main__" == __name__:
         params_dict = FurParam.ConvertFurParams(params01_dict, True)
         return params_dict
 
+    def invert_geom_func(params_dict):
+        params01_vec_dst = []
+        for key in FurParam.ParamsGeom:
+            value = param_geom_dict[key]
+            val01 = FurParam.ConvertFurParam(key, value)
+            params01_vec_dst.append(val01)
+        return params01_vec_dst
+
+    def invert_color_func(params_dict):
+        params01_vec_dst = []
+        for key in FurParam.ParamsColor:
+            value = param_color_dict[key]
+            val01 = FurParam.ConvertFurParam(key, value)
+            params01_vec_dst.append(val01)
+        return params01_vec_dst
+
     ## pick reference image files from folder
     fileList = next(os.walk(folder_reference))[2]
     fileList = [imgFile for imgFile in fileList if ".{0}".format(imgFileExt)==os.path.splitext(imgFile)[1]]
@@ -73,13 +105,9 @@ if "__main__" == __name__:
 
             img_ref_path = "{0}/{1}".format(folder_reference, imgFile)
 
-            ## get background color from real fur sample images --------------- [TEMPORARY: this should be fixed later ...]
+            ## get background color from real fur sample images
             img = cv2.imread(img_ref_path)
-            bg_img = img[30:130,30:130,:]
-            bg_sz  = bg_img.shape[0]*bg_img.shape[1]
-            bg_px_b = np.sum(bg_img[:,:,0]) / (255.0 * bg_sz)
-            bg_px_g = np.sum(bg_img[:,:,1]) / (255.0 * bg_sz)
-            bg_px_r = np.sum(bg_img[:,:,2]) / (255.0 * bg_sz)
+            bg_px_r, bg_px_g, bg_px_b = getBackgroundColor(img)
             cmds.setAttr("{}.backgroundColor".format(Camera_name), bg_px_r,bg_px_g,bg_px_b, type="double3")
 
             ############################################################
@@ -112,17 +140,13 @@ if "__main__" == __name__:
             )
 
             ## convert dictionary to vector
-            params01_vec_dst = []
-            for key in FurParam.ParamsGeom:
-                value = param_geom_dict[key]
-                val01 = FurParam.ConvertFurParam(key, value)
-                params01_vec_dst.append(val01)
+            params01_vec_dst = invert_geom_func(param_geom_dict)
 
             ## 2) local geometry optimization by FeatureGrad
             succeeded, param_geom_dict = search_FeatureGrad.GradientDescent(
                 vgg_max_gray_gram, calc_cost_func, furRenderer.RenderFur,
                 convert_param_geom_func, params01_vec_dst,
-                folder_root, imgFileExt, {"max_iter":20,"max_step":10,"delta":0.1}
+                folder_root, imgFileExt, {"max_iter":20,"max_step":15,"delta":0.1}
             )
 
             ## render the best result
@@ -155,21 +179,17 @@ if "__main__" == __name__:
             )
 
             ## convert dictionary to vector
-            params01_vec_dst = []
-            for key in FurParam.ParamsColor:
-                value = param_color_dict[key]
-                val01 = FurParam.ConvertFurParam(key, value)
-                params01_vec_dst.append(val01)
+            params01_vec_dst = invert_color_func(param_color_dict)
 
             ## 4) local color optimization by FeatureGrad
             succeeded, param_color_dict = search_FeatureGrad.GradientDescent(
                 vgg_max_color_gram, calc_cost_func, furRenderer.RenderFur,
                 convert_param_color_func, params01_vec_dst,
-                folder_root, imgFileExt, {"max_iter":20,"max_step":5,"delta":0.075}
+                folder_root, imgFileExt, {"max_iter":20,"max_step":10,"delta":0.075}
             )
 
             ## render the best result
-            furRenderer.RenderFur(param_geom_dict, folder_root+"/_best_color")
+            furRenderer.RenderFur(param_color_dict, folder_root+"/_best_color")
             
             if False==succeeded:
                 abort = True
