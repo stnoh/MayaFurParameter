@@ -23,7 +23,8 @@ if "__main__" == __name__:
     feature_layers_max = ['block1_conv2', 'block2_conv2', 'block3_conv2', 'block4_conv2', 'block5_conv2']
     weight_layers_max  = [1e2, 1e2, 1e2, 1e2, 1e2]
     func_layer_max     = K.function([model_max.input],
-                                    [model_max.get_layer(layer).output[0,:,:,:] for layer in feature_layers_max])
+                                    [model_max.get_layer(layer).output[:,:,:,:] if K.backend()=='cntk' else
+                                     model_max.get_layer(layer).output[0,:,:,:] for layer in feature_layers_max])
 
     def vgg_max_gray_gram(img_cv2):
 
@@ -40,7 +41,7 @@ if "__main__" == __name__:
         ## get gram matrices at feature layers
         G = []
         for l, _ in enumerate(feature_layers_max):
-            G_l = vgg19.np_gram_matrix(outputs[l]) * weight_layers_max[l]
+            G_l = vgg19.np_gram_matrix(outputs[l][0] if K.backend()=='cntk' else outputs[l]) * weight_layers_max[l]
             G.append(G_l)
 
         t_feature_end = datetime.now()
@@ -59,7 +60,7 @@ if "__main__" == __name__:
         ## get gram matrices at feature layers
         G = []
         for l, _ in enumerate(feature_layers_max):
-            G_l = vgg19.np_gram_matrix(outputs[l]) * weight_layers_max[l]
+            G_l = vgg19.np_gram_matrix(outputs[l][0] if K.backend()=='cntk' else outputs[l]) * weight_layers_max[l]
             G.append(G_l)
 
         t_feature_end = datetime.now()
