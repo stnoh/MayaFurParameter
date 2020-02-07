@@ -151,37 +151,30 @@ def GradientDescent(
         At = np.transpose(A) # At = (15 x N)
         b = ( G_ref_vec - G_dst_vec ).reshape(-1)  # (N x 1), DESCENT direction (feature space)
         Atb = np.dot(At, b) # (15 x N ) x (N x 1) = (15 x 1), DESCENT direction (parameter space)
-
-        AtA = np.dot(At, A)  # At x A = (15 x N) x (N x 15) = (15 x 15)
-        try:
-            AtA_inv = np.linalg.inv(AtA) #  ( 15 x 15 )
-        except Exception as e:
-            ## abort optimization (e.g. ESC key to abort)
-            dump_file = folder_path + "/AtA_iter{0}.txt".format(num_iter)
-            np.savetxt(dump_file, AtA)
-            traceback.print_exc()
-            success = False ## [ABORT]
-            break
-        x = np.dot( AtA_inv, Atb )
-
-        Res_this = calc_cost_func(np.dot(A,x), b)
-
+        
         ############################################################
         ## 3) compute GRADIENT direction
         ############################################################
-        
-        ## 3-i) STEEPEST GRADIENT (direction only)
-        '''
-        w = Atb / np.max(np.abs(Atb))
-        beta = np.linalg.norm( b ) / np.linalg.norm( np.dot( A, w ) )
-        '''
 
-        ## 3-ii) consider the length (?) project solution x to get direction w
-        #'''
-        beta = np.max(np.abs(x))
-        w = x / beta
-        #'''
+        ## consider the length (?) projected solution x to get direction w
+        AtA = np.dot(At, A)  # At x A = (15 x N) x (N x 15) = (15 x 15)
+        try:
+            AtA_inv = np.linalg.inv(AtA) #  ( 15 x 15 )
+            x = np.dot( AtA_inv, Atb )
+            Res_this = calc_cost_func(np.dot(A,x), b)
 
+            beta = np.max(np.abs(x))
+            w = x / beta
+        except Exception as e:
+            ## make dump file
+            dump_file = folder_path + "/AtA_iter{0}.txt".format(num_iter)
+            np.savetxt(dump_file, AtA)
+            traceback.print_exc()
+            
+            ## exceptional case: STEEPEST GRADIENT (direction only)
+            w = Atb / np.max(np.abs(Atb))
+            beta = np.linalg.norm( b ) / np.linalg.norm( np.dot( A, w ) )
+            
         ############################################################
         ## 4) determine alpha (=step size) to the next step
         ############################################################

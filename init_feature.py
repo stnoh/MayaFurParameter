@@ -16,6 +16,7 @@ if "__main__" == __name__:
 
     ## prepare normalized VGG19 with max pooling layers
     model_max = vgg19.VGG19(avgPooling=False)
+    #model_avg = vgg19.VGG19(avgPooling=True)
 
     ############################################################
     ## every 2nd conv. layer in each block: "style feature"
@@ -25,6 +26,11 @@ if "__main__" == __name__:
     func_layer_max     = K.function([model_max.input],
                                     [model_max.get_layer(layer).output[:,:,:,:] if K.backend()=='cntk' else
                                      model_max.get_layer(layer).output[0,:,:,:] for layer in feature_layers_max])
+    '''
+    func_layer_avg     = K.function([model_avg.input],
+                                    [model_avg.get_layer(layer).output[:,:,:,:] if K.backend()=='cntk' else
+                                     model_avg.get_layer(layer).output[0,:,:,:] for layer in feature_layers_max])
+    '''
 
     def vgg_max_gray_gram(img_cv2):
 
@@ -52,6 +58,9 @@ if "__main__" == __name__:
     def vgg_max_color_gram(img_cv2):
 
         t_feature_start = datetime.now()
+
+        ## crop image for color-only evaluation ...
+        img_cv2 = img_cv2[160:420,320:640,:] ## [IMPORTANT] it only evaluates the central part of fur images
 
         ## convert and feed image
         img_keras = vgg19.preprocess_input(img_cv2)
