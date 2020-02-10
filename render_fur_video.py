@@ -61,7 +61,7 @@ if "__main__" == __name__:
     
     output = "{0}/output.avi".format(folderPath)
     print(output)
-    writer = cv2.VideoWriter(output, cv2.cv.CV_FOURCC(*"MJPG"), 30, (image_H, image_W))
+    writer = cv2.VideoWriter(output, cv2.cv.CV_FOURCC(*"MJPG"), 30, (image_W, image_H))
 
     img_files = next(os.walk(renderPath))[2]
     for img_file in img_files:
@@ -69,7 +69,6 @@ if "__main__" == __name__:
         img = cv2.imread(img_path)
         
         ret = writer.write(img)
-        print(ret)
         
     #'''
         cv2.imshow("video_progess", img)
